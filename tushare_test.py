@@ -9,12 +9,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tushare as ts
 from datetime import timedelta
+from matplotlib.ticker import MultipleLocator
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
 
-def candlestick(ax, data, width=0.6, colorup='r', colordown='g', time_format="%Y-%m-%d", alpha=0.7):
-    """ Optimized candle stick graph interface."""
+def candlestick(ax, data, width=0.6, colorup='r', colordown='g', time_format="%Y-%m-%d", alpha=0.7, with_xaxis=True):
+    """ Optimized candle stick graph interface.
+
+        :type ax matplotlib.axes.Axes
+    """
     offset = width / 2.0
     timeseries = data.index
     t = [tt.strftime(time_format) for tt in timeseries]
@@ -23,9 +27,27 @@ def candlestick(ax, data, width=0.6, colorup='r', colordown='g', time_format="%Y
     hh = data['high']
     ll = data['low']
 
-    ax.set_xticks([x*width for x in range(len(t))], minor=True)
     ax.set_xlim(0, len(t)*width)
-    ax.set_xticklabels(t, rotation=90, horizontalalignment='right', minor=True)
+
+    if with_xaxis:
+        major_locator = MultipleLocator(20)
+        minor_locator = MultipleLocator(5)
+
+        ax.set_xticks([x*width for x in range(len(t))], minor=True)
+
+        x_len = len(timeseries)
+        rest = (x_len - 1) % 20
+        last = timeseries[-1]
+        last_time = last + timedelta(20 - rest)
+        ticklabels = [timeseries[d].strftime('%Y-%m-%d') for d in range(len(timeseries)) if d % 20 == 0]
+        if last_time != last:
+            ticklabels.append(last_time.strftime('%Y-%m-%d'))
+        ax.tick_params(axis='both', direction='out', width=2, length=8,
+                       labelsize=len(ticklabels), pad=8)
+        ax.set_xticklabels(ticklabels, horizontalalignment='right')
+
+        ax.xaxis.set_major_locator(major_locator)
+        ax.xaxis.set_minor_locator(minor_locator)
 
     lines = []
     patches = []
@@ -115,6 +137,8 @@ class PriceData(object):
 
     def candlestick_with_macd(self, macd_params=(12, 26, 9)):
         """ Draw candle stick graph with macd graph"""
+        timeseries = self._data.index
+        t = [tt.strftime('%Y-%m-%d') for tt in timeseries]
         close_p = self._data['close']
 
         left, width = 0.1, 0.8
@@ -127,9 +151,30 @@ class PriceData(object):
         main_g = fig.add_axes(main_rect, axis_bgcolor=axescolor)
         macd_g = fig.add_axes(macd_rect, axis_bgcolor=axescolor, sharex=main_g)
 
+        # cofigure shared xaxis
+        major_locator = MultipleLocator(20)
+        minor_locator = MultipleLocator(5)
+
+        xticks = [x*width for x in range(len(t))]
+        macd_g.set_xticks(xticks, minor=True)
+
+        x_len = len(timeseries)
+        rest = (x_len - 1) % 20
+        last = timeseries[-1]
+        last_time = last + timedelta(20 - rest)
+        ticklabels = [timeseries[d].strftime('%Y-%m-%d') for d in range(len(timeseries)) if d % 20 == 0]
+        if last_time != last:
+            ticklabels.append(last_time.strftime('%Y-%m-%d'))
+        macd_g.tick_params(axis='both', direction='out', width=2, length=8,
+                           labelsize=len(ticklabels), pad=8)
+        macd_g.set_xticklabels(ticklabels, horizontalalignment='right')
+
+        macd_g.xaxis.set_major_locator(major_locator)
+        macd_g.xaxis.set_minor_locator(minor_locator)
+
         macd_g.autoscale_view()
 
-        candlestick(main_g, self._data, width=0.6, colorup='r', colordown='g')
+        candlestick(main_g, self._data, with_xaxis=False)
 
         # Draw macd graph
         fast_para, slow_para, smooth_para = macd_params
