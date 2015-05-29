@@ -34,11 +34,10 @@ def candlestick(ax, data, width=0.6, colorup='r', colordown='g', time_format="%Y
     ax.set_xticks([x*width for x in range(len(t))], minor=True)
 
     ticklabels = [t[d] for d in range(len(timeseries)) if d % 20 == 0]
-    ticklabels.insert(0, 'dummy') # fix matplotlib tick bug
+    ticklabels.insert(0, 'dummy')  # fix matplotlib tick bug
     ax.tick_params(axis='both', direction='out', width=2, length=8,
                    labelsize=10, pad=8)
     ax.xaxis.set_ticklabels(ticklabels, horizontalalignment='center')
-    print(len(ticklabels))
     ax.xaxis.set_major_locator(major_locator)
     ax.xaxis.set_minor_locator(minor_locator)
 
@@ -146,8 +145,8 @@ class PriceData(object):
 
         # Draw macd graph
         fast_para, slow_para, smooth_para = macd_params
-        fast = pd.ewma(close_p, fast_para)
-        slow = pd.ewma(close_p, slow_para)
+        fast = pd.ewma(close_p, span=fast_para)
+        slow = pd.ewma(close_p, span=slow_para)
         diff = fast - slow
         dea = pd.ewma(diff, smooth_para)
         macd = diff - dea
