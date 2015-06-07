@@ -11,7 +11,7 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(foo.divide(2, 2), 1)
     
     def test2(self):
-        self.assertEqual(foo.divide(0, 1), 1)
+        self.assertEqual(foo.divide(0, 1), 0)
 
 
 if __name__ == '__main__':
